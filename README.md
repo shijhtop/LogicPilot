@@ -24,34 +24,34 @@ LogicPilot 不是 RTL 生成器，也不绑定某一家 EDA 厂商。
          hardware-design-planning  audit       tb-audit        sim         synth
 ```
 
-默认前端流水线（`/lp-front`）：
+默认前端流水线（Claude Code 中为 `/lp-front`；Codex fallback prompt 中为 `/lp-run all`）：
 
 ```
 plan-check → audit → tb-audit → lint → sim → synth → report
 ```
 
-每个阶段输出 JSON，`status` 只有 `pass / fail / blocked / skip / timeout` 五种值。流水线在第一个非 pass 处停止并标注原因。
+每个阶段输出 JSON。常规 stage `status` 使用 `pass / fail / blocked / skipped / timeout / dry-run`；`/lp-doctor` 的单项检查还会使用 `warn`。流水线在第一个非 pass 处停止并标注原因。
 
 ---
 
 ## 功能
 
-| 功能 | 命令 | 说明 |
-|---|---|---|
-| 项目初始化 | `/lp-init` | 生成 `flow.toml` 和规划文档模板 |
-| 环境诊断 | `/lp-doctor` | 检查 Python 版本、配置、工具可用性 |
-| 前端流水线 | `/lp-front` | 串联 plan-check → audit → tb-audit → lint → sim → synth → report |
-| RTL 静态审查 | `/lp-audit` | 无需外部 EDA；检测 latch、multi-driver、不可综合构造等 |
-| TB 审查 | `/lp-tb` | 检测仅有波形无自检、缺少 PASS/FAIL 标记、随机测试无种子记录等 |
-| Lint | `/lp-lint` | 调用 verilator / verible / ghdl |
-| 仿真 | `/lp-sim` | 调用 verilator / iverilog / ghdl / questa 等 |
-| 综合 | `/lp-synth` | 调用 yosys / vivado / quartus / openroad 等 |
-| CDC 检查 | `/lp-cdc-check` | SpyGlass CDC 优先，降级为 verilator `--cdc`；单时钟设计自动跳过 |
-| 形式验证 | `/lp-formal` | 调用 sby / jaspergold / vcf / qverify |
-| 功耗分析 | `/lp-power` | VCD → SAIF → 功耗报告，必须注明活动率假设 |
-| 时序约束生成 | `/lp-constraints` | 生成 SDC/XDC 约束模板 |
-| 综合报告解读 | `synth-report-reader` 子代理 | 解析大型综合日志，提取 WNS/TNS/利用率/结构性 warning |
-| 结果分诊 | `logicpilot-result-triage` skill | 把 JSON 输出归纳为 verdict → cause → next action |
+| 功能 | Claude Code 命令 | Codex fallback prompt | 说明 |
+|---|---|---|---|
+| 项目初始化 | `/lp-init` | `/lp-init` | 生成 `flow.toml` 和规划文档模板 |
+| 环境诊断 | `/lp-doctor` | `/lp-doctor` | 检查 Python 版本、配置、工具可用性 |
+| 前端流水线 | `/lp-front` | `/lp-run all` | 串联 plan-check → audit → tb-audit → lint → sim → synth → report |
+| RTL 静态审查 | `/lp-audit` | `/lp-run audit` | 无需外部 EDA；检测 latch、multi-driver、不可综合构造等 |
+| TB 审查 | `/lp-tb` | `/lp-run tb-audit` | 检测仅有波形无自检、缺少 PASS/FAIL 标记、随机测试无种子记录等 |
+| Lint | `/lp-lint` | `/lp-run lint` | 调用 verilator / verible / ghdl |
+| 仿真 | `/lp-sim` | `/lp-sim` | 调用 verilator / iverilog / ghdl / questa 等 |
+| 综合 | `/lp-synth` | `/lp-run synth` | 调用 yosys / vivado / quartus / openroad 等 |
+| CDC 检查 | `/lp-cdc-check` | `/lp-cdc-check` | SpyGlass CDC 优先，降级为 verilator `--cdc`；单时钟设计自动跳过 |
+| 形式验证 | `/lp-formal` | `/lp-formal` | 调用 sby / jaspergold / vcf / qverify |
+| 功耗分析 | `/lp-power` | `/lp-power` | VCD → SAIF → 功耗报告，必须注明活动率假设 |
+| 时序约束生成 | `/lp-constraints` | `/lp-constraints` | 生成 SDC/XDC 约束模板 |
+| 综合报告解读 | `synth-report-reader` 子代理 | `hardware-synthesis` skill | 解析大型综合日志，提取 WNS/TNS/利用率/结构性 warning |
+| 结果分诊 | `logicpilot-result-triage` skill | `logicpilot-result-triage` skill | 把 JSON 输出归纳为 verdict → cause → next action |
 
 **硬性门控（完成前必须满足）：**
 
@@ -112,11 +112,13 @@ python3 -m pytest shared/flow/tests -q
 python3 -m pytest shared/skill_tests -q
 ```
 
-更多文档：
+快速验证：
 
-- [docs/JSON-CONTRACT.md](docs/JSON-CONTRACT.md) — 每个阶段的 JSON 输出契约
-- [docs/EXTERNAL-TOOLS.md](docs/EXTERNAL-TOOLS.md) — 外部工具安装参考
-- [docs/QUICKSTART.md](docs/QUICKSTART.md) — 详细快速上手
+```bash
+python3 shared/flow/logicpilot.py --doctor --config flow.toml
+python3 shared/flow/logicpilot.py --list --config flow.toml
+python3 shared/flow/logicpilot.py all --config flow.toml
+```
 
 English version: [README.en.md](README.en.md)
 

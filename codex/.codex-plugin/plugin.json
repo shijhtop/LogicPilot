@@ -44,6 +44,11 @@
     "capabilities": [
       "Read",
       "Write"
+    ],
+    "defaultPrompt": [
+      "Run LogicPilot doctor on this HDL project.",
+      "Audit this RTL with LogicPilot and explain the findings.",
+      "Set up a LogicPilot flow.toml for this hardware block."
     ]
   }
 }

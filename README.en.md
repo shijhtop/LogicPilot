@@ -24,34 +24,34 @@ Spec → Micro-arch → RTL → Source audit → TB audit → Lint → Sim → S
   hardware-design-planning   audit         tb-audit        sim         synth
 ```
 
-Default front-end pipeline (`/lp-front`):
+Default front-end pipeline (`/lp-front` in Claude Code; `/lp-run all` in the Codex fallback prompts):
 
 ```
 plan-check → audit → tb-audit → lint → sim → synth → report
 ```
 
-Each stage outputs JSON. `status` is one of `pass / fail / blocked / skip / timeout`. The pipeline halts at the first non-pass stage and annotates the reason.
+Each stage outputs JSON. Normal stage `status` values are `pass / fail / blocked / skipped / timeout / dry-run`; `/lp-doctor` check rows may also use `warn`. The pipeline halts at the first non-pass stage and annotates the reason.
 
 ---
 
 ## Features
 
-| Feature | Command | Notes |
-|---|---|---|
-| Project init | `/lp-init` | Generates `flow.toml` and planning doc templates |
-| Environment check | `/lp-doctor` | Checks Python version, config, tool availability |
-| Front-end pipeline | `/lp-front` | Chains plan-check → audit → tb-audit → lint → sim → synth → report |
-| RTL static audit | `/lp-audit` | No EDA required; flags latches, multi-drivers, non-synthesizable constructs |
-| TB audit | `/lp-tb` | Flags wave-only tests, missing PASS/FAIL, unseeded randomization, etc. |
-| Lint | `/lp-lint` | Dispatches to verilator / verible / ghdl |
-| Simulation | `/lp-sim` | Dispatches to verilator / iverilog / ghdl / questa etc. |
-| Synthesis | `/lp-synth` | Dispatches to yosys / vivado / quartus / openroad etc. |
-| CDC check | `/lp-cdc-check` | SpyGlass CDC primary, verilator `--cdc` fallback; auto-skip for single-clock designs |
-| Formal verification | `/lp-formal` | Dispatches to sby / jaspergold / vcf / qverify |
-| Power analysis | `/lp-power` | VCD → SAIF → power report; always reports activity assumptions |
-| Constraint generation | `/lp-constraints` | Generates SDC/XDC constraint templates |
-| Synth report reader | `synth-report-reader` sub-agent | Parses large synth logs; extracts WNS/TNS/utilization/structural warnings |
-| Result triage | `logicpilot-result-triage` skill | Summarizes JSON output as verdict → cause → next action |
+| Feature | Claude Code command | Codex fallback prompt | Notes |
+|---|---|---|---|
+| Project init | `/lp-init` | `/lp-init` | Generates `flow.toml` and planning doc templates |
+| Environment check | `/lp-doctor` | `/lp-doctor` | Checks Python version, config, tool availability |
+| Front-end pipeline | `/lp-front` | `/lp-run all` | Chains plan-check → audit → tb-audit → lint → sim → synth → report |
+| RTL static audit | `/lp-audit` | `/lp-run audit` | No EDA required; flags latches, multi-drivers, non-synthesizable constructs |
+| TB audit | `/lp-tb` | `/lp-run tb-audit` | Flags wave-only tests, missing PASS/FAIL, unseeded randomization, etc. |
+| Lint | `/lp-lint` | `/lp-run lint` | Dispatches to verilator / verible / ghdl |
+| Simulation | `/lp-sim` | `/lp-sim` | Dispatches to verilator / iverilog / ghdl / questa etc. |
+| Synthesis | `/lp-synth` | `/lp-run synth` | Dispatches to yosys / vivado / quartus / openroad etc. |
+| CDC check | `/lp-cdc-check` | `/lp-cdc-check` | SpyGlass CDC primary, verilator `--cdc` fallback; auto-skip for single-clock designs |
+| Formal verification | `/lp-formal` | `/lp-formal` | Dispatches to sby / jaspergold / vcf / qverify |
+| Power analysis | `/lp-power` | `/lp-power` | VCD → SAIF → power report; always reports activity assumptions |
+| Constraint generation | `/lp-constraints` | `/lp-constraints` | Generates SDC/XDC constraint templates |
+| Synth report reader | `synth-report-reader` sub-agent | `hardware-synthesis` skill | Parses large synth logs; extracts WNS/TNS/utilization/structural warnings |
+| Result triage | `logicpilot-result-triage` skill | `logicpilot-result-triage` skill | Summarizes JSON output as verdict → cause → next action |
 
 **Hard gates (must pass before declaring done):**
 
@@ -112,11 +112,13 @@ python3 -m pytest shared/flow/tests -q
 python3 -m pytest shared/skill_tests -q
 ```
 
-More documentation:
+Quick verification:
 
-- [docs/JSON-CONTRACT.md](docs/JSON-CONTRACT.md) — JSON output contract for each stage
-- [docs/EXTERNAL-TOOLS.md](docs/EXTERNAL-TOOLS.md) — external tool install reference
-- [docs/QUICKSTART.md](docs/QUICKSTART.md) — detailed quick start guide
+```bash
+python3 shared/flow/logicpilot.py --doctor --config flow.toml
+python3 shared/flow/logicpilot.py --list --config flow.toml
+python3 shared/flow/logicpilot.py all --config flow.toml
+```
 
 中文版：[README.md](README.md)
 
