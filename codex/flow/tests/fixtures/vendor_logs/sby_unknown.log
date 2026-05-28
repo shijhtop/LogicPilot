@@ -1,0 +1,9 @@
+SBY 15:30:00 [logicpilot_formal] engine_0 (smtbmc z3): starting process "yosys-smtbmc"
+SBY 15:30:01 [logicpilot_formal] engine_0: ##   0:00:01  Solver: z3
+SBY 15:30:02 [logicpilot_formal] engine_0: ##   0:00:02  Checking assert in step 0..
+SBY 15:30:08 [logicpilot_formal] engine_0: ##   0:00:08  Checking assert in step 12..
+SBY 15:30:20 [logicpilot_formal] engine_0: ##   0:00:20  Reached time limit
+SBY 15:30:20 [logicpilot_formal] engine_0: Status: UNKNOWN
+SBY 15:30:20 [logicpilot_formal] engine_0: finished (returncode=4)
+SBY 15:30:20 [logicpilot_formal] summary: engine_0 (smtbmc z3) returned UNKNOWN
+SBY 15:30:20 [logicpilot_formal] DONE (UNKNOWN, rc=4)

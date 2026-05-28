@@ -188,13 +188,20 @@ jobs:
           import json, sys
           with open("/tmp/result.json") as f:
               d = json.load(f)
-          fails = [s for s in d["results"] if s["status"] not in ("pass", "skipped")]
+          # cdc-check returning "fail" means the tool ran and found CDC violations.
+          # That is correct behaviour for a multi-clock demo; it is NOT an infra failure.
+          # Every other stage must be pass/skipped.
+          fails = [
+              s for s in d["results"]
+              if s["status"] not in ("pass", "skipped")
+              and not (s["stage"] == "cdc-check" and s["status"] == "fail")
+          ]
           if fails:
               for s in fails:
                   reason = s.get("reason") or (s.get("tail","")[:200] if s.get("tail") else "(no reason)")
                   print(f"FAIL {s['stage']}: status={s['status']} — {reason}")
               sys.exit(1)
-          print(f"OK: {len(d['results'])} stages passed; overall={d.get('overall')}")
+          print(f"OK: {len(d['results'])} stages passed/skipped/cdc-found-violations; overall={d.get('overall')}")
           PY
 
       - name: Upload envelope on failure

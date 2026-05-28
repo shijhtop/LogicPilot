@@ -1,0 +1,37 @@
+****** Vivado v2024.1 (64-bit)
+  **** SW Build 5076996 on Wed May 22 18:36:09 MDT 2024
+  **** IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
+    ** Copyright 1986-2024 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 4 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Common 17-1432] Loaded RTL elaboration
+INFO: [Synth 8-256] done synthesizing module 'soc_top'
+INFO: [Synth 8-5544] ROM "rom_inst" won't be mapped to Block RAM because it is too small
+INFO: [Synth 8-7052] The timing for the instance pll_inst was preserved.
+INFO: [Timing 38-91] WNS-related items reported across 7 clocks.
+INFO: [Timing 38-92] WNSPath analysis enabled with 5 corners.
+
+Report Cell Usage:
++------+------------+------+
+|      |Cell        |Count |
++------+------------+------+
+|1     |LUT1        |    34|
+|2     |LUT2        |   210|
+|3     |LUT3        |   189|
+|4     |LUT4        |    98|
+|5     |LUT5        |    71|
+|6     |LUT6        |   632|
+
+Slice LUTs                |  1234 |     0 |    134600 |  0.92
+Slice Registers           |  2345 |     0 |    269200 |  0.87
+Block RAM Tile            |     8 |     0 |       365 |  2.19
+DSP48E1                   |     4 |     0 |       740 |  0.54
+
+Timing Summary | (Setup mode)
+Worst Negative Slack:     -1.234 ns
+Total Negative Slack:    -45.678 ns
+Worst Hold Slack:          0.052 ns
+
+INFO: [Common 17-2068] Elapsed time: 00:02:43

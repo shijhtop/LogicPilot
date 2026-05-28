@@ -1,0 +1,20 @@
+SBY 13:24:55 [logicpilot_formal] base: starting process "cd logicpilot_formal/src ; ..."
+SBY 13:24:55 [logicpilot_formal] base: finished (returncode=0)
+SBY 13:24:55 [logicpilot_formal] base: Warning: Yosys does not yet support `bind` properly. Workarounds active.
+SBY 13:24:56 [logicpilot_formal] prove: starting process "cd logicpilot_formal/model ; ..."
+SBY 13:24:56 [logicpilot_formal] prove: finished (returncode=0)
+SBY 13:24:56 [logicpilot_formal] engine_0: starting "Z3 4.12.2"
+SBY 13:24:56 [logicpilot_formal] engine_0 (smtbmc z3): starting process "yosys-smtbmc -s z3 --presat --noprogress -t 20 --append 0 ..."
+SBY 13:24:57 [logicpilot_formal] engine_0: ##   0:00:00  Solver: z3
+SBY 13:24:57 [logicpilot_formal] engine_0: ##   0:00:00  Checking assumptions in step 0..
+SBY 13:24:57 [logicpilot_formal] engine_0: ##   0:00:01  Checking assert in step 0..
+SBY 13:24:57 [logicpilot_formal] engine_0: ##   0:00:01  Checking assumptions in step 1..
+SBY 13:24:57 [logicpilot_formal] engine_0: ##   0:00:01  Checking assert in step 1..
+SBY 13:24:58 [logicpilot_formal] engine_0: ##   0:00:02  Checking assumptions in step 19..
+SBY 13:24:58 [logicpilot_formal] engine_0: ##   0:00:02  Checking assert in step 19..
+SBY 13:24:58 [logicpilot_formal] engine_0: ##   0:00:02  Status: PASSED
+SBY 13:24:58 [logicpilot_formal] engine_0: finished (returncode=0)
+SBY 13:24:58 [logicpilot_formal] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:03 (3)
+SBY 13:24:58 [logicpilot_formal] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:02 (2)
+SBY 13:24:58 [logicpilot_formal] summary: engine_0 (smtbmc z3) returned pass
+SBY 13:24:58 [logicpilot_formal] DONE (PASS, rc=0)

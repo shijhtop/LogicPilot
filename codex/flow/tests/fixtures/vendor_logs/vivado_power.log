@@ -1,0 +1,23 @@
+****** Vivado v2024.1 (64-bit) — report_power -file power.rpt
+Copyright 1986-2024 Xilinx, Inc. All Rights Reserved.
+
+Power Report
+
+| Total On-Chip Power (W)  | 1.234 |
+| Dynamic (W)              | 0.900 |
+| Device Static (W)        | 0.334 |
+| Effective TJA (C/W)      |  4.6  |
+| Junction Temperature (C) | 47.8  |
+| Thermal Margin (C / W)   | 52.2 / 11.3 |
+
+| On-Chip Component        | Power (W) | Used | Available | Utilization (%) |
+|--------------------------|-----------|------|-----------|-----------------|
+| Clocks                   |     0.105 |   12 |       --- |             --- |
+| Signals                  |     0.231 | 4321 |       --- |             --- |
+| Logic                    |     0.187 | 2345 |    269200 |            0.87 |
+| BRAM                     |     0.072 |    8 |       365 |            2.19 |
+| DSP                      |     0.041 |    4 |       740 |            0.54 |
+| I/O                      |     0.264 |   42 |       400 |           10.50 |
+
+| Design Power Budget (W)  | 1.500 |
+| Power Budget Margin (W)  | 0.266 |

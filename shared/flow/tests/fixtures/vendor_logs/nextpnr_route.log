@@ -1,0 +1,28 @@
+nextpnr-ice40 -- Next Generation Place and Route (Version v0.7-31-gabc1234)
+Info: Importing design from JSON
+Info: Building chip database
+Info: Device utilisation:
+Info: 	         ICESTORM_LC:   271/ 5280     5%
+Info: 	        ICESTORM_RAM:     1/   30     3%
+Info: 	               SB_IO:    12/   96    12%
+Info: 	               SB_GB:     2/    8    25%
+Info: 	        ICESTORM_PLL:     0/    1     0%
+Info: 	         SB_WARMBOOT:     0/    1     0%
+Info: 	        ICESTORM_DSP:     0/    8     0%
+Info: 	      ICESTORM_HFOSC:     0/    1     0%
+Info: 	      ICESTORM_LFOSC:     0/    1     0%
+
+Info: Running placer1...
+Info: Final placer1 cost = 1234, iterations: 64
+Info: Running router1...
+Info: Routing complete.
+
+Info: Max frequency for clock 'wr_clk': 112.34 MHz (PASS at 100.00 MHz)
+Info: Max frequency for clock 'rd_clk':  41.72 MHz (PASS at 37.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 12 endpoint(s)
+Info:           +9 to     +15 ns | 12 |***
+Info:           +16 to    +22 ns | 36 |*********
+
+Info: Program finished normally.

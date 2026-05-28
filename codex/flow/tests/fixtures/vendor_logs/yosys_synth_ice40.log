@@ -1,0 +1,33 @@
+/----------------------------------------------------------------------------\
+|                                                                            |
+|  yosys 0.43 (git sha1 abc123, gcc 12.2.0 -Os)                              |
+|                                                                            |
+\----------------------------------------------------------------------------/
+
+2.49.1. Analyzing design hierarchy..
+Top module:  \cdc_top
+
+2.49.2. Analyzing design hierarchy..
+Used module:  \async_fifo
+Used module:  \sync_2ff
+
+11.46. Printing statistics.
+
+=== cdc_top ===
+
+   Number of wires:                425
+   Number of wire bits:            791
+   Number of public wires:          24
+   Number of public wire bits:      88
+   Number of memories:               1
+   Number of memory bits:           64
+   Number of processes:              0
+   Number of cells:                312
+     SB_CARRY                       18
+     SB_DFF                         42
+     SB_DFFER                       16
+     SB_DFFR                        24
+     SB_LUT4                       189
+     SB_RAM40_4K                     1
+
+Info: 18 carries, 0 ICESTORM_BRs, 1 ICESTORM_RAMs, 271 LCs (189 LUT, 82 FF)

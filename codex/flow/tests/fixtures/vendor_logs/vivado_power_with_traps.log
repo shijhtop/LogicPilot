@@ -1,0 +1,36 @@
+****** Vivado v2024.1 (64-bit) — report_power with trap-like surrounding context
+Copyright 1986-2024 Xilinx, Inc. All Rights Reserved.
+
+Power Report (with realistic confounding lines that would trip
+non-word-boundary regexes)
+
+== Methodology note ==
+Static Timing Analysis was run with 1234 endpoints.
+Clock Network: 24 nets total, 12 generated.
+Signal Integrity: PASS for 4567 signals.
+Logical Analyzer probes inserted: 8.
+Multiplier blocks instantiated: 4 (used 4, available 740).
+Dynamic Voltage Scaling: not enabled.
+Leakage Power category breakdown follows.
+
+== Headline ==
+| Total On-Chip Power (W)  | 1.234 |
+| Dynamic (W)              | 0.900 |
+| Device Static (W)        | 0.334 |
+| Effective TJA (C/W)      |  4.6  |
+| Junction Temperature (C) | 47.8  |
+| Thermal Margin (C / W)   | 52.2 / 11.3 |
+
+== Per-bucket ==
+| Clocks                   |     0.105 |
+| Signals                  |     0.231 |
+| Logic                    |     0.187 |
+| BRAM                     |     0.072 |
+| DSP                      |     0.041 |
+| I/O                      |     0.264 |
+
+| Design Power Budget (W)  | 1.500 |
+| Power Budget Margin (W)  | 0.266 |
+
+== Footer note ==
+Statically-driven nets: 256 (unrelated to power).

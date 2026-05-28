@@ -1,0 +1,28 @@
+QuestaSim / Verilator coverage summary — typical mixed format
+(intentionally interleaves prose lines that would tempt the bare
+[\d.]+ capture or the [^\n\d]*? gap to pick up wrong numbers)
+
+== Run summary ==
+Coverage estimated for 12 testcases across 4 regressions.
+Total simulation time: 3456 seconds.
+Code coverage analysis enabled with 8 metrics.
+
+== Coverage by metric ==
+Functional Coverage:   92.40%
+Code Coverage:         87.15%
+Line Coverage:         91.20%
+Branch Coverage:       84.50%
+Toggle Coverage:       78.30%
+FSM Coverage:          96.10%
+Assertion Coverage:    99.05%
+
+== Per-instance breakdown ==
+tb_top.dut.fifo                : 95.0% covered
+tb_top.dut.arbiter             : 82.4% covered
+
+== Per-test outcomes ==
+test_basic                     : PASS  (Functional Coverage hit 12 of 14 bins)
+test_corner                    : PASS  (Functional Coverage hit 14 of 14 bins, 100.00%)
+
+== End ==
+All metrics above 80%; regression CLEAN.

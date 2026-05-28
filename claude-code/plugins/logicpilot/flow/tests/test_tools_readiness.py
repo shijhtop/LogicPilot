@@ -39,14 +39,16 @@ def test_discover_tools_with_cfg_includes_all_builtin_stages(tmp_path: Path) -> 
 def test_builtin_stages_are_runnable(tmp_path: Path) -> None:
     """Built-ins run with no external tool → status='runnable' always.
 
-    Exception: stages in BUILTIN_STAGES_NEEDING_TOOL MAY be 'blocked'
-    when their required tool is missing — the contract there is
+    Exception: stages in BUILTIN_STAGES_NEEDING_TOOL (all-of) or
+    BUILTIN_STAGES_NEEDING_ANY_TOOL (any-of) MAY be 'blocked' when
+    their required tool(s) are missing — the contract there is
     install_hint + missing.
     """
-    from logicpilot_flow.stages import BUILTIN_STAGES_NEEDING_TOOL
+    from logicpilot_flow.stages import BUILTIN_STAGES_NEEDING_TOOL, BUILTIN_STAGES_NEEDING_ANY_TOOL
     out = discover_tools(_minimal_cfg(tmp_path))
+    needs_tool = set(BUILTIN_STAGES_NEEDING_TOOL) | set(BUILTIN_STAGES_NEEDING_ANY_TOOL)
     for name in BUILTIN_STAGES:
-        if name in BUILTIN_STAGES_NEEDING_TOOL:
+        if name in needs_tool:
             assert out["stages"][name]["status"] in ("runnable", "blocked")
             if out["stages"][name]["status"] == "blocked":
                 assert "missing" in out["stages"][name]
