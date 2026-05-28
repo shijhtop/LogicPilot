@@ -4,8 +4,9 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 dist/
-build/
 .DS_Store
+shared/flow/demo*/build/
+shared/flow/demo/build/
 *.vcd
 *.saif
 *.log

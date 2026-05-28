@@ -33,15 +33,9 @@ probes = ["vivado"]
 timeout_s = 3600
 cmd = "vivado -mode batch -nojournal -nolog -source /dev/stdin <<'TCL'\nopen_checkpoint {build}/{top}_synth.dcp\nopt_design\nplace_design\nroute_design\nreport_utilization -file {build}/util_impl.rpt\nreport_timing_summary -file {build}/timing_impl.rpt\nwrite_checkpoint -force {build}/{top}_impl.dcp\nwrite_bitstream -force {build}/{top}.bit\nputs [exec cat {build}/timing_impl.rpt]\nTCL"
 
-[stages.power]
-# Post-implementation power estimate. With [activity] saif_file/vcd_file it
-# annotates switching activity; otherwise the report is vectorless/default and
-# should be treated as an early estimate only.
-name = "vivado-power"
-probes = ["vivado"]
-path_probes = ["{build}/{top}_impl.dcp"]
-timeout_s = 1200
-cmd = "vivado -mode batch -nojournal -nolog -source /dev/stdin <<'TCL'\nopen_checkpoint {build}/{top}_impl.dcp\nset saif_file {saif_file_tcl}\nset vcd_file {vcd_file_tcl}\nset activity_instance {activity_instance_tcl}\nif {[string length $saif_file] > 0 && [file exists $saif_file]} {\n  if {[string length $activity_instance] > 0} {\n    read_saif -input $saif_file -instance $activity_instance\n  } else {\n    read_saif -input $saif_file\n  }\n  puts \"POWER_ACTIVITY: SAIF $saif_file\"\n} elseif {[string length $vcd_file] > 0 && [file exists $vcd_file]} {\n  if {[string length $activity_instance] > 0} {\n    read_vcd -file $vcd_file -scope $activity_instance\n  } else {\n    read_vcd -file $vcd_file\n  }\n  puts \"POWER_ACTIVITY: VCD $vcd_file\"\n} else {\n  puts {POWER_ACTIVITY: vectorless/default switching activity; provide [activity] saif_file or vcd_file for realistic power}\n}\nreport_power -file {build}/power_impl.rpt\nputs \"== power ==\"\nputs [exec cat {build}/power_impl.rpt]\nTCL"
+# [stages.power] is handled by the Python power driver (power.py).
+# Use [activity].saif_file in flow.toml to provide a pre-existing SAIF, or
+# install vcs so the driver generates SAIF automatically before reporting.
 
 [stages.gls]
 # Post-implementation timing (functional) sim: write a netlist + SDF, then

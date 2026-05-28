@@ -28,6 +28,14 @@ INSTALL_HINTS: dict[str, dict[str, str]] = {
         "pacman": "sudo pacman -S yosys",
         "source": "https://yosyshq.net/yosys/download.html",
     },
+    "sg_shell": {
+        "vendor": "https://www.synopsys.com/implementation-and-signoff/signoff/spyglass.html",
+        "note":   "SpyGlass CDC; commercial, license required. Set [cdc].spyglass_script in flow.toml for project-specific TCL.",
+    },
+    "vcs": {
+        "vendor": "https://www.synopsys.com/verification/simulation/vcs.html",
+        "note":   "Synopsys VCS; commercial, license required. Used by the power driver to generate SAIF for annotated power analysis.",
+    },
     "verilator": {
         "apt":    "sudo apt install verilator",
         "brew":   "brew install verilator",

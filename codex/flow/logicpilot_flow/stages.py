@@ -24,6 +24,7 @@ BUILTIN_STAGES_NEEDING_TOOL: dict[str, tuple[str, ...]] = {}
 # to whichever backend is installed (sby / jaspergold / vcf / qverify).
 BUILTIN_STAGES_NEEDING_ANY_TOOL: dict[str, tuple[str, ...]] = {
     "formal": ("sby", "jaspergold", "vcf", "qverify"),
+    "cdc-check": ("sg_shell", "verilator"),
 }
 
 # plan-check sits at the head of the default `all` pipeline as of v0.6.

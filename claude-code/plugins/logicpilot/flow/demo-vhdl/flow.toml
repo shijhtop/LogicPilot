@@ -1,0 +1,14 @@
+[project]
+top         = "counter"
+hdl         = "auto"               # auto-detect -> vhdl (from .vhd extensions)
+src         = ["rtl/**/*.vhd"]
+tb          = ["tb/**/*_tb.vhd"]
+constraints = "constraints/counter.pcf"
+build_dir   = "build"
+clock_mhz   = 50
+
+[toolchain]
+preset  = "yosys-nextpnr"
+family  = "ice40"
+device  = "up5k"
+package = "sg48"

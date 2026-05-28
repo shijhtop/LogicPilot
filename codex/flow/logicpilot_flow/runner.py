@@ -9,8 +9,6 @@ from pathlib import Path
 from .audit import run_source_audit, run_testbench_audit
 from .cdc_check import run_cdc_check
 from .diagnostics import (
-    power_assumptions,
-    power_warnings,
     quality_warnings,
     sim_walltime_warnings,
     verification_failures,
@@ -21,6 +19,7 @@ from .metrics import evaluate_checks, parse_metrics
 from .constraints_gen import run_constraints
 from .formal import run_formal
 from .plan_check import run_plan_check
+from .power import run_power
 from .report import run_report
 from . import scheduler as _scheduler
 from .stages import BUILTIN_STAGES, STAGE_ORDER, resolve_stage
@@ -55,6 +54,8 @@ def run_stage(
         return run_testbench_audit(cfg, print_cmd=print_cmd)
     if name == "cdc-check":
         return run_cdc_check(cfg, print_cmd=print_cmd, experimental=experimental)
+    if name == "power":
+        return run_power(cfg, print_cmd=print_cmd)
     if name == "constraints":
         return run_constraints(cfg, print_cmd=print_cmd)
     if name == "formal":
@@ -141,12 +142,6 @@ def run_stage(
         "metrics": metrics,
         "tail": "\n".join(log_text.splitlines()[-25:]),
     }
-
-    if name == "power":
-        result["assumptions"] = power_assumptions(log_text, cfg, variables)
-        power_flags = power_warnings(log_text, metrics, cfg)
-        if power_flags:
-            result.setdefault("warnings", []).extend(power_flags)
 
     if name in ("sim", "verify", "coverage"):
         verification_flags = verification_warnings(log_text, metrics, cfg)

@@ -1,0 +1,43 @@
+{
+  "version": "1",
+  "generated_by": "logicpilot-demo/cdc-async-fifo",
+  "generated_at": "2026-05-27T00:00:00Z",
+  "top_module": "cdc_top",
+  "set_clock_groups_declared": true,
+  "clocks": [
+    { "name": "wr_clk", "period_ns": 10.0, "domain": "producer", "source": "ext" },
+    { "name": "rd_clk", "period_ns": 27.0, "domain": "consumer", "source": "ext" }
+  ],
+  "crossings": [
+    {
+      "from_clock":  "wr_clk",
+      "to_clock":    "rd_clk",
+      "signal":      "u_fifo.wr_ptr_gray",
+      "width":       4,
+      "payload_kind":"bus",
+      "synchronizer":"gray_counter",
+      "verdict":     "safe",
+      "evidence": {
+        "file":   "rtl/async_fifo.v",
+        "line":   76,
+        "module": "async_fifo",
+        "note":   "Gray-coded write pointer enters rd_clk via sync_2ff u_sync_wr2rd; only one bit changes per increment, so the synchronized value is monotone even across metastability."
+      }
+    },
+    {
+      "from_clock":  "rd_clk",
+      "to_clock":    "wr_clk",
+      "signal":      "u_fifo.rd_ptr_gray",
+      "width":       4,
+      "payload_kind":"bus",
+      "synchronizer":"gray_counter",
+      "verdict":     "safe",
+      "evidence": {
+        "file":   "rtl/async_fifo.v",
+        "line":   83,
+        "module": "async_fifo",
+        "note":   "Gray-coded read pointer enters wr_clk via sync_2ff u_sync_rd2wr; symmetric to wr_ptr_gray crossing."
+      }
+    }
+  ]
+}
