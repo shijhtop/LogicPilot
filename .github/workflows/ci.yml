@@ -179,7 +179,10 @@ jobs:
           set -euo pipefail
           export PATH="$HOME/oss-cad-suite/bin:$PATH"
           cd shared/flow/demo-cdc
-          python3 ../logicpilot.py all --config flow.toml > /tmp/result.json
+          # Exit code 1 = a stage reported fail/blocked (normal for a demo that shows
+          # CDC violations). Exit code > 1 = infra error (crash, missing config, etc.).
+          python3 ../logicpilot.py all --config flow.toml > /tmp/result.json || lp_exit=$?
+          if [ "${lp_exit:-0}" -gt 1 ]; then exit "${lp_exit:-1}"; fi
           python3 -c "import json; d=json.load(open('/tmp/result.json')); [print(f'  {s[\"stage\"]:12} → {s[\"status\"]:8} ({s.get(\"tool\",\"-\")})') for s in d['results']]; print('overall:', d.get('overall'))"
 
       - name: Assert every stage passed
