@@ -1,0 +1,222 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python-tests:
+    name: Python tests (${{ matrix.os }}, ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-latest is ARM64 (Apple Silicon) on GitHub Actions since 2024.
+        # If Intel macOS coverage becomes a requirement, add `macos-13` here
+        # (see roadmap §12 Q10). v0.7a deliberately ships ARM64 only.
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest tomli
+
+      - name: Run flow unit tests
+        run: |
+          python -m pytest shared/flow/tests -q
+
+      - name: Run skill pressure-test static layer
+        run: |
+          python -m pytest shared/skill_tests -q
+
+  package-check:
+    name: Package cleanliness and syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: No accidental junk files
+        run: |
+          set -euo pipefail
+          junk="$(find . \
+            -name '__pycache__' -o \
+            -name '*.pyc' -o \
+            -name '.pytest_cache' -o \
+            -name '.DS_Store' -o \
+            -name 'node_modules' -o \
+            -name '.venv' -o \
+            -name 'venv' \
+          )"
+          if [ -n "$junk" ]; then
+            echo "$junk"
+            exit 1
+          fi
+
+      - name: Python syntax
+        run: |
+          python -m compileall -q shared/flow
+          python -m compileall -q shared/skill_tests
+          python -m compileall -q claude-code/plugins/logicpilot/scripts
+          python -m py_compile install.py sync_package.py sync_skills.py
+
+      - name: Shell syntax
+        run: |
+          bash -n install.sh
+
+      - name: Mirrored flow files are in sync
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import filecmp
+
+          roots = [
+              Path("shared/flow"),
+              Path("codex/flow"),
+              Path("claude-code/plugins/logicpilot/flow"),
+          ]
+
+          def files(root):
+              return sorted(
+                  p.relative_to(root)
+                  for p in root.rglob("*")
+                  if p.is_file() and "__pycache__" not in p.parts
+              )
+
+          baseline = files(roots[0])
+          ok = True
+          for root in roots[1:]:
+              current = files(root)
+              if current != baseline:
+                  print(f"file list mismatch: {root}")
+                  print("missing:", sorted(set(baseline) - set(current)))
+                  print("extra:", sorted(set(current) - set(baseline)))
+                  ok = False
+                  continue
+              for rel in baseline:
+                  if not filecmp.cmp(roots[0] / rel, root / rel, shallow=False):
+                      print(f"content mismatch: {rel} in {root}")
+                      ok = False
+          raise SystemExit(0 if ok else 1)
+          PY
+
+      - name: sync_package.py drift check
+        run: |
+          python sync_package.py
+          if ! git diff --exit-code; then
+            echo ""
+            echo "ERROR: sync_package.py produced changes that were not committed."
+            echo "Run 'python sync_package.py' locally and commit the result."
+            exit 1
+          fi
+
+  e2e-oss-cad:
+    # End-to-end run of the demo-cdc project on real open-source EDA tools
+    # (iverilog/verilator/yosys/sby from OSS CAD Suite). Catches runner /
+    # scheduler / config drift that mock-fixture unit tests can't, plus
+    # vendor-format drift after toolchain upgrades. Commercial tools
+    # (Vivado / Quartus / VCS / JG / VCF) are never installed here — that
+    # class of regression is covered by golden-log fixtures.
+    name: End-to-end demo-cdc on OSS CAD Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest tomli
+
+      - name: Cache OSS CAD Suite
+        id: cache-oss
+        uses: actions/cache@v4
+        with:
+          # Bump this date deliberately to pull a newer OSS CAD Suite — that's
+          # exactly when you want to surface vendor-format drift.
+          key: oss-cad-suite-2025-09-01-linux-x64
+          path: ~/oss-cad-suite
+
+      - name: Download OSS CAD Suite
+        if: steps.cache-oss.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          cd "$HOME"
+          tag="2025-09-01"
+          datestamp="$(echo "$tag" | tr -d '-')"
+          url="https://github.com/YosysHQ/oss-cad-suite-build/releases/download/${tag}/oss-cad-suite-linux-x64-${datestamp}.tgz"
+          echo "Downloading $url"
+          curl -fL -o oss-cad-suite.tgz "$url"
+          tar -xf oss-cad-suite.tgz
+          rm oss-cad-suite.tgz
+
+      - name: Show tool versions
+        run: |
+          export PATH="$HOME/oss-cad-suite/bin:$PATH"
+          iverilog -V 2>&1 | head -1
+          yosys -V 2>&1 | head -1
+          verilator -V 2>&1 | head -1
+          sby --help 2>&1 | head -1 || true
+
+      - name: Run demo-cdc full pipeline
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/oss-cad-suite/bin:$PATH"
+          cd shared/flow/demo-cdc
+          python3 ../logicpilot.py all --config flow.toml > /tmp/result.json
+          python3 -c "import json; d=json.load(open('/tmp/result.json')); [print(f'  {s[\"stage\"]:12} → {s[\"status\"]:8} ({s.get(\"tool\",\"-\")})') for s in d['results']]; print('overall:', d.get('overall'))"
+
+      - name: Assert every stage passed
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          with open("/tmp/result.json") as f:
+              d = json.load(f)
+          fails = [s for s in d["results"] if s["status"] not in ("pass", "skipped")]
+          if fails:
+              for s in fails:
+                  reason = s.get("reason") or (s.get("tail","")[:200] if s.get("tail") else "(no reason)")
+                  print(f"FAIL {s['stage']}: status={s['status']} — {reason}")
+              sys.exit(1)
+          print(f"OK: {len(d['results'])} stages passed; overall={d.get('overall')}")
+          PY
+
+      - name: Upload envelope on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-envelope
+          path: /tmp/result.json
+
+  windows-smoke:
+    name: Windows installer smoke
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PowerShell syntax and help
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Get-Command pwsh | Out-Null
+          Get-Command powershell | Out-Null
+          # Parse the installer without mutating the machine.
+          $null = [scriptblock]::Create((Get-Content .\install.ps1 -Raw))

@@ -1,0 +1,13 @@
+[project]
+top         = "counter"
+src         = ["rtl/**/*.v"]
+tb          = ["tb/**/*_tb.v"]
+constraints = "constraints/counter.pcf"
+build_dir   = "build"
+clock_mhz   = 50
+
+[toolchain]
+preset  = "yosys-nextpnr"
+family  = "ice40"
+device  = "up5k"
+package = "sg48"

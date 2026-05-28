@@ -1,0 +1,107 @@
+# presets/yosys-nextpnr.toml
+# Fully open-source flow. Default target shown is Lattice iCE40; switch the
+# device/family in flow.toml [toolchain] and the synth_* / nextpnr-* commands
+# below for ECP5 (synth_ecp5 / nextpnr-ecp5) or Gowin (synth_gowin).
+#
+# LANGUAGE + SIMULATOR SELECTION
+# Stages that depend on the HDL language (lint/sim/synth/gls) are defined as an
+# ordered list of `candidates`. The driver:
+#   1. resolves the project HDL family (auto-detected from file extensions, or
+#      [project] hdl = "verilog"|"vhdl"|"mixed"),
+#   2. keeps candidates whose `hdl` covers that family,
+#   3. picks the FIRST one whose `probe`/`probes` are on PATH (= priority order),
+#   4. reports the chosen tool in the JSON `tool` field.
+# Reorder the candidates to change simulator priority; add your own (e.g. a
+# licensed Questa/VCS entry at the top) without touching the plugin.
+
+# ---------------------------------------------------------------- lint
+[[stages.lint.candidates]]
+name = "verilator+verible"
+hdl  = ["verilog"]
+probes = ["verilator"]
+cmd = "{ command -v verible-verilog-lint >/dev/null 2>&1 && verible-verilog-lint {src}; } || true; verilator --lint-only -Wall -sv {src}"
+
+[[stages.lint.candidates]]
+name = "ghdl-syntax"
+hdl  = ["vhdl"]
+probes = ["ghdl"]
+cmd = "ghdl -s --std=08 --workdir={build} {src}"
+
+# ---------------------------------------------------------------- sim
+# Simulator priority (Verilog): verilator (fast, strict) -> iverilog (compat).
+# Simulator priority (VHDL):    nvc (fast) -> ghdl.
+# The TB top module is assumed to be <top>_tb.
+[[stages.sim.candidates]]
+name = "verilator"
+hdl  = ["verilog"]
+probes = ["verilator"]
+timeout_s = 120
+cmd = "verilator --binary -j 0 --timing --trace -Wno-fatal -sv --top-module {tb_top} --Mdir {build}/obj_dir {src} {tb} -o Vsim && {build}/obj_dir/Vsim"
+
+[[stages.sim.candidates]]
+name = "iverilog"
+hdl  = ["verilog"]
+probes = ["iverilog", "vvp"]
+timeout_s = 120
+cmd = "iverilog -g2012 -o {build}/sim.out {tb} {src} && vvp {build}/sim.out"
+
+[[stages.sim.candidates]]
+name = "nvc"
+hdl  = ["vhdl"]
+probes = ["nvc"]
+timeout_s = 120
+cmd = "nvc --std=2008 -a {src} {tb} && nvc --std=2008 -e {tb_top} && nvc --std=2008 -r {tb_top} --wave={build}/wave.fst"
+
+[[stages.sim.candidates]]
+name = "ghdl"
+hdl  = ["vhdl"]
+probes = ["ghdl"]
+timeout_s = 120
+cmd = "ghdl -a --std=08 --workdir={build} {src} {tb} && ghdl -e --std=08 --workdir={build} {tb_top} && ghdl -r --std=08 --workdir={build} {tb_top} --vcd={build}/wave.vcd"
+
+# ---------------------------------------------------------------- synth
+[[stages.synth.candidates]]
+name = "yosys"
+hdl  = ["verilog"]
+probes = ["yosys"]
+timeout_s = 600
+cmd = "yosys -p 'read_verilog -sv {src}; synth_ice40 -top {top} -json {build}/{top}.json; stat'"
+
+[[stages.synth.candidates]]
+name = "yosys+ghdl"
+hdl  = ["vhdl"]
+probes = ["yosys", "ghdl"]
+timeout_s = 600
+cmd = "yosys -m ghdl -p 'ghdl --std=08 {src} -e {top}; synth_ice40 -top {top} -json {build}/{top}.json; stat'"
+
+# ---------------------------------------------------------------- pnr
+# Language-agnostic: operates on the JSON netlist from synth.
+[stages.pnr]
+probes = ["nextpnr-ice40", "icepack"]
+timeout_s = 1800
+cmd = "nextpnr-ice40 --{device} --package {package} --json {build}/{top}.json --pcf {constraints} --asc {build}/{top}.asc --freq {clock_mhz} && icepack {build}/{top}.asc {build}/{top}.bin"
+
+# ---------------------------------------------------------------- gls
+# Gate-level (post-synth) functional sim. Verilog netlist path; for VHDL the
+# yosys netlist is still Verilog, so reuse a Verilog sim + cell models.
+# GLS: the yosys netlist is always Verilog. A Verilog testbench can co-sim it
+# with iverilog + the cell models. A VHDL testbench cannot (iverilog can't read
+# VHDL), so VHDL projects need a mixed-language sim (Questa/VCS) or a VHDL
+# netlist writer — add such a candidate here. Until then VHDL GLS reports
+# `blocked`, which is honest, rather than silently mis-simulating.
+[[stages.gls.candidates]]
+name = "iverilog-gls"
+hdl  = ["verilog"]
+probes = ["yosys", "yosys-config", "iverilog", "vvp"]
+timeout_s = 300
+cmd = "yosys -p 'read_verilog -sv {src}; synth_ice40 -top {top}; write_verilog {build}/{top}_netlist.v' && iverilog -g2012 -o {build}/gls.out {tb} {build}/{top}_netlist.v $(yosys-config --datdir)/ice40/cells_sim.v && vvp {build}/gls.out"
+
+# ---------------------------------------------------------------- lec
+[[stages.lec.candidates]]
+name = "yosys-equiv"
+hdl  = ["verilog"]
+probes = ["yosys"]
+timeout_s = 600
+# Self-contained LEC: build the gate implementation in this stage, stash gold and
+# gate designs under distinct top names, then prove equivalence.
+cmd = "yosys -p 'read_verilog -sv {src}; prep -top {top}; design -stash gold; design -reset; read_verilog -sv {src}; synth_ice40 -top {top}; rename {top} gate_{top}; design -stash gate; design -reset; design -copy-from gold -as gold_{top} {top}; design -copy-from gate -as gate_{top} gate_{top}; equiv_make gold_{top} gate_{top} equiv; prep -top equiv; equiv_simple; equiv_status -assert'"

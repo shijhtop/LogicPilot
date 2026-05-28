@@ -1,0 +1,6 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware Design Discipline"
+  short_description: "Think first, minimal logic, surgical edits, verify"
+policy:
+  allow_implicit_invocation: true

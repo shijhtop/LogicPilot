@@ -1,0 +1,117 @@
+# presets/asic-openlane.toml
+# Open-source ASIC RTL->GDSII flow built on OpenROAD-flow-scripts (ORFS):
+# Yosys+ABC (synth) -> OpenROAD (floorplan/place/cts/route) -> OpenSTA (signoff)
+# -> KLayout/Magic+Netgen (GDSII, DRC, LVS), on an open PDK (sky130hd/gf180).
+#
+# NOTE: unlike the yosys-nextpnr FPGA preset, these back-end stages are NOT
+# validated in this repo's sandbox (ORFS is a large Docker/native install).
+# Treat the commands as a correct-shape template and verify against your ORFS
+# version. OpenLane (config.json + `openlane`) is an alternative driver.
+#
+# Required env/inputs (set in flow.toml [toolchain]):
+#   orfs        = path to OpenROAD-flow-scripts (its flow/ dir is used)
+#   platform    = sky130hd | gf180mcuD | ...   (PDK/standard-cell platform)
+#   config_mk   = path to the design's ORFS config.mk (DESIGN_NAME, VERILOG_FILES,
+#                 SDC_FILE, CORE_UTILIZATION, PLACE_DENSITY, etc.)
+# The front-end (lint/sim) is identical to the FPGA flow and target-agnostic.
+
+[pipeline]
+# ASIC RTL->GDSII order (overrides the driver's FPGA default).
+order = ["lint", "sim", "synth", "floorplan", "place", "cts", "route", "signoff", "gds"]
+
+# ----------------------------------------------------- front-end (shared)
+[[stages.lint.candidates]]
+name = "verilator+verible"
+hdl  = ["verilog"]
+probes = ["verilator"]
+cmd = "{ command -v verible-verilog-lint >/dev/null 2>&1 && verible-verilog-lint {src}; } || true; verilator --lint-only -Wall -sv {src}"
+
+[[stages.lint.candidates]]
+name = "ghdl-syntax"
+hdl  = ["vhdl"]
+probes = ["ghdl"]
+cmd = "ghdl -s --std=08 --workdir={build} {src}"
+
+[[stages.sim.candidates]]
+name = "verilator"
+hdl  = ["verilog"]
+probes = ["verilator"]
+timeout_s = 120
+cmd = "verilator --binary -j 0 --timing --trace -Wno-fatal -sv --top-module {tb_top} --Mdir {build}/obj_dir {src} {tb} -o Vsim && {build}/obj_dir/Vsim"
+
+[[stages.sim.candidates]]
+name = "iverilog"
+hdl  = ["verilog"]
+probes = ["iverilog", "vvp"]
+timeout_s = 120
+cmd = "iverilog -g2012 -o {build}/sim.out {tb} {src} && vvp {build}/sim.out"
+
+[[stages.sim.candidates]]
+name = "ghdl"
+hdl  = ["vhdl"]
+probes = ["ghdl"]
+timeout_s = 120
+cmd = "ghdl -a --std=08 --workdir={build} {src} {tb} && ghdl -e --std=08 --workdir={build} {tb_top} && ghdl -r --std=08 --workdir={build} {tb_top} --vcd={build}/wave.vcd"
+
+# ----------------------------------------------------- back-end (ASIC-specific)
+# Each stage runs the corresponding ORFS make target. ORFS resolves the PDK,
+# standard-cell .lib/.lef, and SDC from the config.mk + platform. Metrics
+# (area, WNS/TNS, DRC count) are parsed from the stage logs by the driver.
+[stages.synth]
+probes = ["make"]
+path_probes = ["{orfs}/flow/Makefile", "{config_mk}"]
+timeout_s = 1200
+# RTL -> standard-cell netlist (Yosys + ABC against the platform .lib).
+cmd = "make -C {orfs}/flow DESIGN_CONFIG={config_mk} synth; rc=$?; cat {orfs}/flow/logs/{platform}/*/synth_stat.txt 2>/dev/null || true; exit $rc"
+
+[stages.floorplan]
+probes = ["make"]
+path_probes = ["{orfs}/flow/Makefile", "{config_mk}"]
+timeout_s = 1200
+# Floorplan init, IO/macro placement, tapcell/welltie, PDN generation.
+cmd = "make -C {orfs}/flow DESIGN_CONFIG={config_mk} floorplan"
+
+[stages.place]
+probes = ["make"]
+path_probes = ["{orfs}/flow/Makefile", "{config_mk}"]
+timeout_s = 1800
+# Global + detailed placement, resizing/buffering.
+cmd = "make -C {orfs}/flow DESIGN_CONFIG={config_mk} place"
+
+[stages.cts]
+probes = ["make"]
+path_probes = ["{orfs}/flow/Makefile", "{config_mk}"]
+timeout_s = 1800
+# Clock tree synthesis + post-CTS timing optimization + filler insertion.
+cmd = "make -C {orfs}/flow DESIGN_CONFIG={config_mk} cts"
+
+[stages.route]
+probes = ["make"]
+path_probes = ["{orfs}/flow/Makefile", "{config_mk}"]
+timeout_s = 3600
+# Global + detailed routing.
+cmd = "make -C {orfs}/flow DESIGN_CONFIG={config_mk} route"
+
+[stages.signoff]
+probes = ["make"]
+path_probes = ["{orfs}/flow/Makefile", "{config_mk}"]
+timeout_s = 1800
+# Sign-off STA (OpenSTA) — setup/hold across corners. WNS/TNS parsed from log.
+cmd = "make -C {orfs}/flow DESIGN_CONFIG={config_mk} grt_report || true; make -C {orfs}/flow DESIGN_CONFIG={config_mk} final_report"
+
+[stages.gds]
+probes = ["make"]
+path_probes = ["{orfs}/flow/Makefile", "{config_mk}"]
+timeout_s = 3600
+# Metal fill, GDSII stream-out (KLayout), then DRC + LVS sign-off.
+cmd = "make -C {orfs}/flow DESIGN_CONFIG={config_mk} final && make -C {orfs}/flow DESIGN_CONFIG={config_mk} klayout_drc lvs"
+
+# ----------------------------------------------------- ASIC metrics
+# Tool/version-specific; override under [metrics.patterns] in flow.toml as needed.
+[metrics.patterns]
+area_um2  = "(?:Design area|Chip area|Core area)[^\\n\\d]*?([\\d.]+)"
+cells     = "(?:Number of cells|instance count|Instances)[^\\n\\d]*?(\\d[\\d,]*)"
+wns_ns    = "(?:Worst Negative Slack|WNS|wns)[^\\n\\d-]*?(-?[\\d.]+)"
+tns_ns    = "(?:Total Negative Slack|TNS|tns)[^\\n\\d-]*?(-?[\\d.]+)"
+util_pct  = "(?:utilization|Util)[^\\n\\d]*?([\\d.]+)\\s*%"
+drc_viol  = "(?:DRC violations?|Total violations)[^\\n\\d]*?(\\d+)"

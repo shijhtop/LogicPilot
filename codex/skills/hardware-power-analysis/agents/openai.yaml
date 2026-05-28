@@ -1,0 +1,7 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware Power Analysis"
+  short_description: "Estimate, report, and reduce power"
+policy:
+  # implicit = Codex may auto-trigger from a matching prompt.
+  allow_implicit_invocation: true

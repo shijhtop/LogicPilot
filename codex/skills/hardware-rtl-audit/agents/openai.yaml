@@ -1,0 +1,7 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware RTL Audit"
+  short_description: "Audit RTL for risk patterns"
+policy:
+  # implicit = Codex may auto-trigger from a matching prompt.
+  allow_implicit_invocation: true

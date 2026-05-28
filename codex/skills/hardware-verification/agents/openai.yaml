@@ -1,0 +1,5 @@
+interface:
+  display_name: "Hardware Verification Knowledge"
+  short_description: "Reference: testbench, assertions, formal, coverage"
+policy:
+  allow_implicit_invocation: true

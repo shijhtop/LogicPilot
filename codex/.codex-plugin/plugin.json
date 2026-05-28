@@ -1,0 +1,49 @@
+{
+  "name": "logicpilot",
+  "version": "0.5.1",
+  "description": "Front-end-first LogicPilot workflow: RTL/SV design and modeling, source/TB audit, synthesizable coding, lint, simulation, verification, synthesis, power analysis, constraints, CDC, interfaces, and optional FPGA/ASIC back-end.",
+  "author": {
+    "name": "LogicPilot Maintainers"
+  },
+  "license": "MIT",
+  "keywords": [
+    "asic",
+    "cdc",
+    "coverage",
+    "eda",
+    "formal",
+    "fpga",
+    "fsm",
+    "hdl",
+    "logicpilot",
+    "power",
+    "randomization",
+    "rdc",
+    "report",
+    "reset",
+    "rtl",
+    "scoreboard",
+    "source-audit",
+    "synthesis",
+    "systemverilog",
+    "tb-audit",
+    "testbench",
+    "thermal",
+    "timing",
+    "timing-closure",
+    "verilog",
+    "vhdl"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "LogicPilot",
+    "shortDescription": "Tool-agnostic RTL/HDL front-end workflow and knowledge skills",
+    "longDescription": "Skills covering design discipline, planning, RTL design, SystemVerilog design/modeling, source and testbench audits, synthesizable coding, reset/RDC, FSM, CDC, constraints, interfaces, simulation, SystemVerilog verification platforms, assertions/coverage/formal, synthesis, power analysis, FPGA architecture optimization/timing closure, gate-level verification, and ASIC implementation, plus a toolchain-agnostic flow driver.",
+    "developerName": "LogicPilot Maintainers",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ]
+  }
+}

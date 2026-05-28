@@ -1,0 +1,6 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware Interfaces & Buses"
+  short_description: "valid/ready, AXI/APB/Avalon/Wishbone, interconnect"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,22 @@
+{
+  "name": "logicpilot-marketplace",
+  "owner": {
+    "name": "LogicPilot Maintainers",
+    "email": ""
+  },
+  "metadata": {
+    "description": "LogicPilot RTL/FPGA/ASIC design-flow tooling with SV modeling, source/TB audit, RTL design/review, CDC/RDC, reset/FSM, verification, synthesis, power analysis, reporting, and optional back-end profiles.",
+    "version": "0.5.1"
+  },
+  "plugins": [
+    {
+      "name": "logicpilot",
+      "source": "./claude-code/plugins/logicpilot",
+      "description": "Generic LogicPilot workflow: SV/RTL design, source/TB audit, reset/FSM/CDC, lint, simulation, synthesis, power reports, reporting, and optional FPGA/ASIC back-end profiles.",
+      "version": "0.5.1",
+      "author": {
+        "name": "LogicPilot Maintainers"
+      }
+    }
+  ]
+}

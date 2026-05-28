@@ -1,0 +1,6 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware Timing Constraints"
+  short_description: "Author SDC/XDC/PCF: clocks, I/O delay, exceptions"
+policy:
+  allow_implicit_invocation: true

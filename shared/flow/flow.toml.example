@@ -1,0 +1,93 @@
+# flow.toml — copy this into your RTL project root and edit.
+# The agent reads this to know which files and stages exist. It does not assume
+# a specific EDA suite; stage candidates and local tool detection decide what can
+# run in the current workspace.
+
+[project]
+top         = "counter"
+tb_top      = "counter_tb"          # defaults to "<top>_tb" when omitted
+hdl         = "auto"                # RTL HDL: "auto" | "verilog" | "vhdl" | "mixed"
+# tb_hdl    = "auto"                # optional when RTL and testbench differ
+src         = ["rtl/**/*.v", "rtl/**/*.sv", "rtl/**/*.vhd"]   # recursive
+tb          = ["tb/**/*_tb.*"]
+# For VHDL/SV packages/interfaces or dependency-sensitive projects, prefer an ordered list.
+# Put packages before users and avoid shared declarations in $unit:
+# src_ordered = ["rtl/pkg/types_pkg.sv", "rtl/if/*.sv", "rtl/**/*.sv"]
+constraints = "constraints/counter.sdc"
+build_dir   = "build"
+clock_mhz   = 50
+
+# Optional power/activity assumptions. A power number is actionable only when
+# these assumptions are known; with no activity file, most tools use vectorless
+# defaults and the result is an early estimate.
+#
+# Generate SAIF in your sim stage command and point saif_file here:
+#   VCS:     add -power flag; run vpd2saif post-sim to produce the SAIF
+#   Questa:  vsim -do "power add -r /*; run -all; power report -all -bsaif build/sim.saif"
+#   Xcelium: xrun -saif build/sim.saif
+#[activity]
+#saif_file = "build/sim.saif"
+#instance = "dut"                  # optional DUT scope for activity annotation
+#
+#[power]
+#total_budget_w = 1.5
+#temperature_c = 85
+#voltage = "nominal"
+
+
+# Built-in stages (no external EDA tool required):
+#   python3 <flow>/logicpilot.py audit    --config flow.toml
+#   python3 <flow>/logicpilot.py tb-audit --config flow.toml
+#   python3 <flow>/logicpilot.py report   --config flow.toml
+# `audit` scans [project].src/src_ordered for risky RTL patterns.
+# `tb-audit` scans [project].tb/tb_ordered for verification-quality risks.
+# `report` summarizes existing build/logs/*.log files.
+# No [stages.audit], [stages.tb-audit], or [stages.report] section is needed.
+
+
+# Optional verification thresholds. The driver can parse common coverage
+# percentages from sim/coverage logs and warn if they are below the goal.
+#[verification]
+#coverage_goal_pct = 90
+#seed_required = true
+
+[toolchain]
+# Choose any preset shipped by this repo or define stages directly below.
+# The preset is a workflow profile, not a plugin-level recommendation.
+preset  = "yosys-nextpnr"
+family  = ""
+device  = ""
+package = ""
+
+# Optional: project-local stage override. Candidate order is your policy.
+# The driver filters candidates by HDL support and detects `probe`/`probes` on
+# PATH. `timeout_s` prevents hung simulations, and `checks` can make simulation
+# success machine-readable instead of trusting exit code alone.
+#
+# [stages.sim.checks]
+# pass_regex = "\\b(PASS|TEST_PASS)\\b"
+# fail_regex = "\\b(FAIL|TEST_FAIL|ERROR|FATAL)\\b|\\$fatal"
+# require_pass = true
+#
+# [[stages.sim.candidates]]
+# name  = "my-simulator"
+# hdl   = ["verilog", "vhdl"]
+# probes = ["my-sim-binary"]
+# timeout_s = 120
+# cmd   = "my-sim-command {src} {tb}"
+
+# Optional: fixed commands can declare required tools and paths so --tools does
+# not falsely report a stage runnable.
+#
+# [stages.my_stage]
+# probes = ["make"]
+# path_probes = ["scripts/run_my_stage.sh"]
+# timeout_s = 600
+# cmd = "scripts/run_my_stage.sh {top}"
+
+# Optional: extra metric regexes for reports the driver does not know yet.
+# Power keys ending in _w are normalized to watts when the regex captures a
+# unit in group 2 (W/mW/uW/nW).
+# [metrics.patterns]
+# fmax_mhz = "Achieved Fmax\\s*[:=]\\s*([\\d.]+)"
+# total_power_w = "Total Power\\s*[:=]\\s*([\\d.]+)\\s*(mW|W)"

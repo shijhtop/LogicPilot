@@ -1,0 +1,6 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware CDC/RDC Review"
+  short_description: "Structural review of clock/reset-domain crossings"
+policy:
+  allow_implicit_invocation: true

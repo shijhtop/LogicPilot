@@ -1,0 +1,37 @@
+{
+  "name": "logicpilot",
+  "version": "0.5.1",
+  "description": "Front-end-first LogicPilot workflow agent: RTL/SV design/modeling, source audit, TB audit, lint, simulation, verification, synthesis, power reports, reporting, and optional FPGA/ASIC backend profiles.",
+  "author": {
+    "name": "LogicPilot Maintainers"
+  },
+  "license": "MIT",
+  "keywords": [
+    "asic",
+    "cdc",
+    "coverage",
+    "eda",
+    "formal",
+    "fpga",
+    "fsm",
+    "hdl",
+    "logicpilot",
+    "power",
+    "randomization",
+    "rdc",
+    "report",
+    "reset",
+    "rtl",
+    "scoreboard",
+    "source-audit",
+    "synthesis",
+    "systemverilog",
+    "tb-audit",
+    "testbench",
+    "thermal",
+    "timing",
+    "timing-closure",
+    "verilog",
+    "vhdl"
+  ]
+}

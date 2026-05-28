@@ -1,0 +1,40 @@
+# LogicPilot demo: two-clock async FIFO + CDC inventory.
+#
+# Exercises plan-check / audit / tb-audit / cdc-check / sim / synth on a
+# multi-clock SystemVerilog project. Picks up the open-source yosys
+# preset so it runs on any machine with oss-cad-suite installed.
+
+[project]
+top         = "cdc_top"
+src_ordered = ["rtl/sync_2ff.v", "rtl/async_fifo.v", "rtl/cdc_top.v"]
+tb          = ["tb/**/*_tb.v"]
+build_dir   = "build"
+clock_mhz   = 100
+
+[toolchain]
+preset  = "yosys-nextpnr"
+family  = "ice40"
+device  = "up5k"
+package = "sg48"
+
+# Only sim is exercised in this demo — the FPGA pnr stage needs a pcf
+# pin map for a real device, which is out of scope.
+[pipeline]
+order = ["plan-check", "audit", "tb-audit", "cdc-check", "constraints", "sim", "synth"]
+
+[cdc]
+clocks = ["wr_clk", "rd_clk", "dst_clk"]
+
+[stages.sim]
+[[stages.sim.candidates]]
+name  = "iverilog"
+hdl   = ["verilog"]
+probe = "iverilog"
+cmd   = "iverilog -g2012 -o build/sim.vvp {src} {tb} && vvp build/sim.vvp"
+
+[stages.synth]
+[[stages.synth.candidates]]
+name  = "yosys"
+hdl   = ["verilog"]
+probe = "yosys"
+cmd   = "yosys -q -p 'read_verilog -sv {src}; hierarchy -top {top}; proc; opt; fsm; opt; memory; opt; synth_ice40 -json build/synth.json'"

@@ -1,0 +1,8 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware RTL Design"
+  short_description: "Write synthesizable Verilog/SystemVerilog"
+policy:
+  # implicit = Codex may auto-trigger from a matching prompt;
+  # explicit-only (hardware-rtl-design) for slow/expensive stages.
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "Hardware Design Planning"
+  short_description: "Spec + micro-architecture before writing RTL"
+policy:
+  allow_implicit_invocation: true

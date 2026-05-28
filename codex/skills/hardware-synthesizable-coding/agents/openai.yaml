@@ -1,0 +1,5 @@
+interface:
+  display_name: "Hardware Synthesizable HDL Coding"
+  short_description: "Reference: synthesizable subset for Verilog/SV/VHDL"
+policy:
+  allow_implicit_invocation: true

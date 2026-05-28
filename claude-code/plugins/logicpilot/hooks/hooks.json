@@ -1,0 +1,30 @@
+{
+  "description": "LogicPilot non-blocking project scan and opt-in HDL lint hooks.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/lint_on_write.py\"",
+            "timeout": 20,
+            "statusMessage": "LogicPilot lint check"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/session_start.py\"",
+            "timeout": 10,
+            "statusMessage": "LogicPilot project scan"
+          }
+        ]
+      }
+    ]
+  }
+}

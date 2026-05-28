@@ -1,0 +1,39 @@
+# config.toml.example — merge the relevant bits into ~/.codex/config.toml
+# (user-global) or .codex/config.toml (project-scoped, trusted projects only).
+#
+# Codex resolves config in order: managed admin > CLI flags > project
+# .codex/config.toml (closest dir wins) > ~/.codex/config.toml > defaults.
+
+# EDA flows run real shell tools (yosys/iverilog/vivado) and write build/.
+# Use a workspace-write sandbox and on-request approvals while iterating;
+# tighten for untrusted repos.
+approval_policy = "on-request"
+sandbox_mode    = "workspace-write"
+
+[sandbox_workspace_write]
+# Synthesis/P&R tools often need to write outside cwd (caches, temp). Add the
+# paths your toolchain uses; keep this minimal.
+writable_roots = ["build", "/tmp"]
+network_access = false
+
+# --- Skills -----------------------------------------------------------------
+# Skills are auto-discovered from ~/.codex/skills/ and .codex/skills/. To
+# disable one without deleting it:
+# [[skills.config]]
+# path = "/abs/path/to/SKILL.md"
+# enabled = false
+
+# --- Optional: expose a user-written MCP wrapper -----------------------------
+# This package does not ship an MCP server. If you create a small wrapper around
+# the flow driver for cross-tool reuse, register that wrapper here. Not required:
+# the skills call the driver via shell directly.
+# [mcp_servers.logicpilot]
+# command = "python"
+# args = ["/abs/path/to/your_logicpilot_mcp_server.py"]
+# env = { LOGICPILOT_FLOW = "/abs/path/to/shared/flow/logicpilot.py" }
+# timeout_secs = 120
+
+# --- Optional: a profile for headless CI runs (codex exec) ------------------
+# [profiles.fpga-ci]
+# approval_policy = "never"
+# sandbox_mode    = "workspace-write"

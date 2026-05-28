@@ -1,0 +1,24 @@
+{
+  "version": "1",
+  "generated_by": "test-fixture/bad-2ff-on-bus",
+  "generated_at": "2026-06-01T10:23:00Z",
+  "top_module": "soc_top",
+  "set_clock_groups_declared": true,
+  "clocks": [
+    { "name": "clk_a", "period_ns": 10.0, "domain": "core",       "source": "PLL0" },
+    { "name": "clk_b", "period_ns":  8.0, "domain": "peripheral", "source": "PLL1" }
+  ],
+  "crossings": [
+    {
+      "from_clock": "clk_a",
+      "to_clock":   "clk_b",
+      "signal":     "u_data.payload",
+      "width":      8,
+      "payload_kind": "bus",
+      "synchronizer": "2ff",
+      "stages":       2,
+      "verdict":      "safe",
+      "evidence": { "file": "src/data_path.sv", "line": 142, "module": "data_path" }
+    }
+  ]
+}

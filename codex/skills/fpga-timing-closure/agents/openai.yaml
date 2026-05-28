@@ -1,0 +1,8 @@
+# Codex-specific metadata (ignored by Claude Code and other agents).
+interface:
+  display_name: "FPGA Timing Closure"
+  short_description: "Place-and-route, close timing, optimize area"
+policy:
+  # implicit = Codex may auto-trigger from a matching prompt;
+  # explicit-only (fpga-timing-closure) for slow/expensive stages.
+  allow_implicit_invocation: false

@@ -1,0 +1,59 @@
+# presets/vivado.toml
+# AMD/Xilinx Vivado flow, driven in non-project batch mode via TCL.
+# The TCL snippets are inlined with `vivado -mode batch -source`. For real
+# projects move them into build/tcl/*.tcl and `-source` the file instead.
+#
+# Tools assumed on PATH: vivado, xvlog/xelab/xsim (for sim/gls).
+# Set device/family/package + clock_mhz in flow.toml [toolchain]/[project].
+
+[stages.lint]
+hdl = ["verilog"]
+probes = ["vivado"]
+timeout_s = 300
+cmd = "{ command -v verible-verilog-lint >/dev/null 2>&1 && verible-verilog-lint {src}; } || true; vivado -mode batch -nojournal -nolog -source /dev/stdin <<'TCL'\nread_verilog -sv [list {src_tcl}]\nset_property top {top} [current_fileset]\nsynth_design -top {top} -part {device} -rtl -rtl_skip_mlo\nTCL"
+
+[stages.sim]
+# Behavioral sim with xsim. xvlog compiles, xelab elaborates, xsim runs.
+hdl = ["verilog"]
+probes = ["xvlog", "xelab", "xsim"]
+timeout_s = 300
+cmd = "xvlog -sv {src} {tb} && xelab {tb_top} -s sim_snapshot && xsim sim_snapshot -R"
+
+[stages.synth]
+# Out-of-context synthesis + utilization + timing summary reports.
+hdl = ["verilog"]
+probes = ["vivado"]
+timeout_s = 1800
+cmd = "vivado -mode batch -nojournal -nolog -source /dev/stdin <<'TCL'\nread_verilog -sv [list {src_tcl}]\nread_xdc {constraints_tcl}\nsynth_design -top {top} -part {device}\nreport_utilization -file {build}/util_synth.rpt\nreport_timing_summary -file {build}/timing_synth.rpt\nwrite_checkpoint -force {build}/{top}_synth.dcp\nputs \"== utilization ==\"\nputs [exec cat {build}/util_synth.rpt]\nputs \"== timing ==\"\nputs [exec cat {build}/timing_synth.rpt]\nTCL"
+
+[stages.pnr]
+# Place + route (implementation) from the synth checkpoint, then post-route
+# timing. WNS is parsed by the driver from the timing summary.
+probes = ["vivado"]
+timeout_s = 3600
+cmd = "vivado -mode batch -nojournal -nolog -source /dev/stdin <<'TCL'\nopen_checkpoint {build}/{top}_synth.dcp\nopt_design\nplace_design\nroute_design\nreport_utilization -file {build}/util_impl.rpt\nreport_timing_summary -file {build}/timing_impl.rpt\nwrite_checkpoint -force {build}/{top}_impl.dcp\nwrite_bitstream -force {build}/{top}.bit\nputs [exec cat {build}/timing_impl.rpt]\nTCL"
+
+[stages.power]
+# Post-implementation power estimate. With [activity] saif_file/vcd_file it
+# annotates switching activity; otherwise the report is vectorless/default and
+# should be treated as an early estimate only.
+name = "vivado-power"
+probes = ["vivado"]
+path_probes = ["{build}/{top}_impl.dcp"]
+timeout_s = 1200
+cmd = "vivado -mode batch -nojournal -nolog -source /dev/stdin <<'TCL'\nopen_checkpoint {build}/{top}_impl.dcp\nset saif_file {saif_file_tcl}\nset vcd_file {vcd_file_tcl}\nset activity_instance {activity_instance_tcl}\nif {[string length $saif_file] > 0 && [file exists $saif_file]} {\n  if {[string length $activity_instance] > 0} {\n    read_saif -input $saif_file -instance $activity_instance\n  } else {\n    read_saif -input $saif_file\n  }\n  puts \"POWER_ACTIVITY: SAIF $saif_file\"\n} elseif {[string length $vcd_file] > 0 && [file exists $vcd_file]} {\n  if {[string length $activity_instance] > 0} {\n    read_vcd -file $vcd_file -scope $activity_instance\n  } else {\n    read_vcd -file $vcd_file\n  }\n  puts \"POWER_ACTIVITY: VCD $vcd_file\"\n} else {\n  puts {POWER_ACTIVITY: vectorless/default switching activity; provide [activity] saif_file or vcd_file for realistic power}\n}\nreport_power -file {build}/power_impl.rpt\nputs \"== power ==\"\nputs [exec cat {build}/power_impl.rpt]\nTCL"
+
+[stages.gls]
+# Post-implementation timing (functional) sim: write a netlist + SDF, then
+# simulate the testbench against it.
+hdl = ["verilog"]
+probes = ["vivado", "xvlog", "xelab", "xsim"]
+timeout_s = 600
+cmd = "vivado -mode batch -nojournal -nolog -source /dev/stdin <<'TCL'\nopen_checkpoint {build}/{top}_impl.dcp\nwrite_verilog -force -mode timesim -sdf_anno true {build}/{top}_timesim.v\nwrite_sdf -force {build}/{top}.sdf\nTCL\nxvlog -sv {build}/{top}_timesim.v {tb} && xelab {tb_top} -s gls_snap -sdfmax {build}/{top}.sdf && xsim gls_snap -R"
+
+[stages.lec]
+path_probes = ["{build}/{top}_timesim.v"]
+# Vivado has no built-in LEC; use the structural netlist + your own checker,
+# or hand off to a formal tool. Placeholder asserts the netlist exists.
+timeout_s = 30
+cmd = "test -f {build}/{top}_timesim.v && echo 'LEC: use a dedicated equivalence checker (e.g. yosys equiv or a commercial LEC) on {build}/{top}_timesim.v' "
