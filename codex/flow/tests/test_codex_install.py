@@ -40,6 +40,27 @@ def test_codex_install_exposes_driver_under_codex_home(tmp_path, monkeypatch):
     assert driver.is_file()
 
 
+def test_no_legacy_placeholder_install_wrappers():
+    assert not (ROOT / "install.sh").exists()
+    assert not (ROOT / "install.ps1").exists()
+
+
+def test_stale_package_version_is_not_present():
+    stale_version = ".".join(("0", "5", "1"))
+    offenders = [
+        str(path.relative_to(ROOT))
+        for path in ROOT.rglob("*")
+        if path.is_file()
+        and ".git" not in path.parts
+        and "__pycache__" not in path.parts
+        and ".pytest_cache" not in path.parts
+        and path.suffix != ".pyc"
+        and stale_version in path.read_text(encoding="utf-8", errors="ignore")
+    ]
+
+    assert not offenders
+
+
 def test_codex_marketplace_package_includes_driver_and_prompts():
     manifest = CODEX_PLUGIN / ".codex-plugin" / "plugin.json"
     assert manifest.exists()

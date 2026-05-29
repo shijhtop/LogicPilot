@@ -18,7 +18,6 @@
     }
   ],
   "metadata": {
-    "version": "0.5.1",
     "description": "LogicPilot marketplace: SV/RTL design, source/TB audit, verification, synthesis, power analysis, reports, FPGA/ASIC flows."
   }
 }

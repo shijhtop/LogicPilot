@@ -1,6 +1,6 @@
 {
   "name": "logicpilot",
-  "version": "0.5.1",
+  "version": "0.0.0",
   "description": "Front-end-first LogicPilot workflow agent: RTL/SV design/modeling, source audit, TB audit, lint, simulation, verification, synthesis, power reports, reporting, and optional FPGA/ASIC backend profiles.",
   "author": {
     "name": "LogicPilot Maintainers"

@@ -72,10 +72,6 @@ jobs:
           python -m compileall -q claude-code/plugins/logicpilot/scripts
           python -m py_compile install.py sync_package.py sync_skills.py
 
-      - name: Shell syntax
-        run: |
-          bash -n install.sh
-
       - name: Codex plugin manifest
         run: |
           python - <<'PY'
@@ -228,20 +224,3 @@ jobs:
         with:
           name: e2e-envelope
           path: /tmp/result.json
-
-  windows-smoke:
-    name: Windows installer smoke
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: PowerShell syntax and help
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          Get-Command pwsh | Out-Null
-          Get-Command powershell | Out-Null
-          # Parse the installer without mutating the machine.
-          $null = [scriptblock]::Create((Get-Content .\install.ps1 -Raw))

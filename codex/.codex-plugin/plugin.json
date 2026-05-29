@@ -1,6 +1,6 @@
 {
   "name": "logicpilot",
-  "version": "0.5.1",
+  "version": "0.0.0",
   "description": "Front-end-first LogicPilot workflow: RTL/SV design and modeling, source/TB audit, synthesizable coding, lint, simulation, verification, synthesis, power analysis, constraints, CDC, interfaces, and optional FPGA/ASIC back-end.",
   "author": {
     "name": "LogicPilot Maintainers"
